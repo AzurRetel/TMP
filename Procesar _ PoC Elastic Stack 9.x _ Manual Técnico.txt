@@ -347,7 +347,7 @@ ls -lh /opt/elastic/apm/
 En Kibana:
 Management → Integrations → Elastic APM → Add Elastic APM
 Configuración básica:
-Integration name: apm-1
+Integration name: apm-1
 
 
 APM Server host:
@@ -363,8 +363,8 @@ Save integration
 
 3. Verificación de la integración (IMPORTANTE)
 En Kibana:
-Management → Fleet → Agent Policies
-Seleccionar la policy usada.
+Management → Fleet → Agent Policies
+Seleccionar la policy usada.
 Validar:
 * Elastic APM → Status: Healthy / Active
 Luego:
