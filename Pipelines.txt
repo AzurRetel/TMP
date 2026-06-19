@@ -1,0 +1,65 @@
+filter {
+  # 1. Rompemos la línea usando el separador de tubería |
+  csv {
+    separator => "|"
+    columns => [
+      "DM_TIMESTAMP",
+      "DM_TXID",
+      "DM_OPERATION_TYPE",
+      "DM_USER",
+      "ID_SOL_RETIRO",
+      "ID_PROCESAR",
+      "NU_MONTO_DEDUCIBLE",
+      "NU_MONTO_NO_DEDUCIBLE",
+      "FC_SOLICITUD",
+      "CH_FOLIO_FACIAL",
+      "RFC",
+      "NU_TIPO_APLICACION",
+      "CV_ESTATUS_RETIRO",
+      "CH_DESC_ESTATUS_RETIRO",
+      "CURP",
+      "ID_PROCESAR_AFORE",
+      "CV_AFORE",
+      "CH_DESC_AFORE"
+    ]
+    # El truco maestro: Borra automáticamente todos los espacios basura de los extremos
+    autostrip => true
+  }
+
+  # 2. Limpieza de los puntos finales (.) que Oracle le pone a los números enteros
+  mutate {
+    gsub => [
+      "DM_TXID", "\.$", "",
+      "ID_SOL_RETIRO", "\.$", "",
+      "ID_PROCESAR", "\.$", "",
+      "NU_TIPO_APLICACION", "\.$", "",
+      "ID_PROCESAR_AFORE", "\.$", ""
+    ]
+  }
+
+  # 3. Convertimos los textos a números reales para que hagan match con tu Template
+  mutate {
+    convert => {
+      "DM_TXID" => "integer"
+      "ID_SOL_RETIRO" => "integer"
+      "ID_PROCESAR" => "integer"
+      "ID_PROCESAR_AFORE" => "integer"
+      "NU_TIPO_APLICACION" => "integer"
+      "NU_MONTO_DEDUCIBLE" => "float"
+      "NU_MONTO_NO_DEDUCIBLE" => "float"
+    }
+  }
+
+  # 4. Parseo de fechas para que Elastic las reconozca como "date" y no como texto
+  date {
+    match => [ "DM_TIMESTAMP", "yyyy-MM-dd HH:mm:ss" ]
+    target => "DM_TIMESTAMP"
+    timezone => "America/Mexico_City"
+  }
+
+  date {
+    match => [ "FC_SOLICITUD", "yyyy-MM-dd HH:mm:ss" ]
+    target => "FC_SOLICITUD"
+    timezone => "America/Mexico_City"
+  }
+}
