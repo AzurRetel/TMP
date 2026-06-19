@@ -1,5 +1,4 @@
 filter {
-  # 1. Rompemos la línea usando el separador de tubería |
   csv {
     separator => "|"
     columns => [
@@ -22,10 +21,31 @@ filter {
       "CV_AFORE",
       "CH_DESC_AFORE"
     ]
-    autostrip => true
   }
 
-  # 2. Limpieza de los puntos finales (.) de Oracle
+  mutate {
+    strip => [
+      "DM_TIMESTAMP",
+      "DM_TXID",
+      "DM_OPERATION_TYPE",
+      "DM_USER",
+      "ID_SOL_RETIRO",
+      "ID_PROCESAR",
+      "NU_MONTO_DEDUCIBLE",
+      "NU_MONTO_NO_DEDUCIBLE",
+      "FC_SOLICITUD",
+      "CH_FOLIO_FACIAL",
+      "RFC",
+      "NU_TIPO_APLICACION",
+      "CV_ESTATUS_RETIRO",
+      "CH_DESC_ESTATUS_RETIRO",
+      "CURP",
+      "ID_PROCESAR_AFORE",
+      "CV_AFORE",
+      "CH_DESC_AFORE"
+    ]
+  }
+
   mutate {
     gsub => [
       "DM_TXID", "\.$", "",
@@ -36,7 +56,6 @@ filter {
     ]
   }
 
-  # 3. Conversión de tipos de datos
   mutate {
     convert => {
       "DM_TXID" => "integer"
@@ -49,7 +68,6 @@ filter {
     }
   }
 
-  # 4. Parseo de fechas
   date {
     match => [ "DM_TIMESTAMP", "yyyy-MM-dd HH:mm:ss" ]
     target => "DM_TIMESTAMP"
@@ -58,11 +76,10 @@ filter {
 
   date {
     match => [ "FC_SOLICITUD", "yyyy-MM-dd HH:mm:ss" ]
-    target => "@timestamp" # 🌟 CAMBIO CLAVE: Así el índice toma el mes del trámite
+    target => "@timestamp"
     timezone => "America/Mexico_City"
   }
 
-  # 🌟 5. LÓGICA ESPEJO CDC (Faltaba esto para que el Output sepa qué hacer)
   if [DM_OPERATION_TYPE] == "I" or [DM_OPERATION_TYPE] == "U" {
     mutate { add_field => { "[@metadata][action]" => "index" } }
   } else if [DM_OPERATION_TYPE] == "D" {
