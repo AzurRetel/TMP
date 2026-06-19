@@ -22,11 +22,10 @@ filter {
       "CV_AFORE",
       "CH_DESC_AFORE"
     ]
-    # El truco maestro: Borra automáticamente todos los espacios basura de los extremos
     autostrip => true
   }
 
-  # 2. Limpieza de los puntos finales (.) que Oracle le pone a los números enteros
+  # 2. Limpieza de los puntos finales (.) de Oracle
   mutate {
     gsub => [
       "DM_TXID", "\.$", "",
@@ -37,7 +36,7 @@ filter {
     ]
   }
 
-  # 3. Convertimos los textos a números reales para que hagan match con tu Template
+  # 3. Conversión de tipos de datos
   mutate {
     convert => {
       "DM_TXID" => "integer"
@@ -50,7 +49,7 @@ filter {
     }
   }
 
-  # 4. Parseo de fechas para que Elastic las reconozca como "date" y no como texto
+  # 4. Parseo de fechas
   date {
     match => [ "DM_TIMESTAMP", "yyyy-MM-dd HH:mm:ss" ]
     target => "DM_TIMESTAMP"
@@ -59,7 +58,16 @@ filter {
 
   date {
     match => [ "FC_SOLICITUD", "yyyy-MM-dd HH:mm:ss" ]
-    target => "FC_SOLICITUD"
+    target => "@timestamp" # 🌟 CAMBIO CLAVE: Así el índice toma el mes del trámite
     timezone => "America/Mexico_City"
+  }
+
+  # 🌟 5. LÓGICA ESPEJO CDC (Faltaba esto para que el Output sepa qué hacer)
+  if [DM_OPERATION_TYPE] == "I" or [DM_OPERATION_TYPE] == "U" {
+    mutate { add_field => { "[@metadata][action]" => "index" } }
+  } else if [DM_OPERATION_TYPE] == "D" {
+    mutate { add_field => { "[@metadata][action]" => "delete" } }
+  } else {
+    mutate { add_field => { "[@metadata][action]" => "index" } }
   }
 }
