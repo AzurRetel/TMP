@@ -1,1 +1,24 @@
 echo "2026-06-19 18:00:00|999999|I|USER_TEST|888888|1111|1500.00|0.00|2026-06-19 12:30:15|FOLIO123|RFC999999XYZ|1|A|ACTIVO|CURP999999|2222|CV01|AFORE_TEST" | nc 172.21.66.152 5044
+
+
+
+# Transforma el texto de la fecha del movimiento en un objeto de fecha real para analisis temporal
+  date {
+    match => [ "DM_TIMESTAMP", "yyyy-MM-dd HH:mm:ss" ]
+    target => "DM_TIMESTAMP"
+    timezone => "America/Mexico_City"
+  }
+
+  # Transforma la fecha del tramite y la asigna al campo principal para que el output determine el mes del indice
+  date {
+    match => [ "FC_SOLICITUD", "yyyy-MM-dd HH:mm:ss" ]
+    target => "@timestamp"
+    timezone => "America/Mexico_City"
+  }
+
+  # Convierte el campo original FC_SOLICITUD a formato ISO para que Elasticsearch lo acepte sin errores
+  date {
+    match => [ "FC_SOLICITUD", "yyyy-MM-dd HH:mm:ss" ]
+    target => "FC_SOLICITUD"
+    timezone => "America/Mexico_City"
+  }
