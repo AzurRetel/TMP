@@ -1,0 +1,454 @@
+﻿Instalaciones 
+Instalación Elasticsearch 9.x  RHEL
+# Importar la llave GPG de Elastic
+sudo rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+
+# Crear repositorio Elastic 9.x
+sudo tee /etc/yum.repos.d/elasticsearch.repo <<'EOF'
+[elasticsearch]
+name=Elasticsearch repository for 9.x packages
+baseurl=https://artifacts.elastic.co/packages/9.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+EOF
+
+
+# Limpiar caché de repositorios
+sudo dnf clean all
+
+
+# Reconstruir caché de paquetes
+sudo dnf makecache
+
+
+# Instalar Elasticsearch
+sudo dnf install -y elasticsearch
+
+
+# Verificar versión instalada
+/usr/share/elasticsearch/bin/elasticsearch --version
+
+
+# Habilitar servicio al arranque
+sudo systemctl enable elasticsearch
+
+
+# Iniciar servicio
+sudo systemctl start elasticsearch
+
+
+# Consultar estado del servicio
+sudo systemctl status elasticsearch
+
+
+# Ver logs en tiempo real
+sudo journalctl -u elasticsearch -f
+
+# Kibana  RHEL 8
+# Importar la llave GPG de Elastic
+sudo rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+
+# Crear repositorio Elastic 9.x
+sudo tee /etc/yum.repos.d/elasticsearch.repo <<'EOF'
+[elasticsearch]
+name=Elasticsearch repository for 9.x packages
+baseurl=https://artifacts.elastic.co/packages/9.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+EOF
+
+
+# Limpiar caché de repositorios
+sudo dnf clean all
+
+
+# Reconstruir caché de paquetes
+sudo dnf makecache
+
+
+# Instalar Kibana
+sudo dnf install -y kibana
+
+
+# Verificar versión instalada
+kibana --version
+
+
+# Habilitar servicio al arranque
+sudo systemctl enable kibana
+
+
+# Iniciar servicio
+sudo systemctl start kibana
+
+
+# Consultar estado del servicio
+sudo systemctl status kibana
+
+
+# Ver logs en tiempo real
+sudo journalctl -u kibana -f
+
+Filebeat RHEL 
+# Importar la llave GPG de Elastic
+sudo rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+
+# Crear repositorio Elastic 9.x
+sudo tee /etc/yum.repos.d/elasticsearch.repo <<'EOF'
+[elasticsearch]
+name=Elasticsearch repository for 9.x packages
+baseurl=https://artifacts.elastic.co/packages/9.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+EOF
+
+
+# Limpiar caché de repositorios
+sudo dnf clean all
+
+
+# Reconstruir caché de paquetes
+sudo dnf makecache
+
+
+# NUEVO
+# Instalar Filebeat
+sudo dnf install -y filebeat
+
+
+# Verificar versión instalada
+filebeat version
+
+
+# Habilitar servicio al arranque
+sudo systemctl enable filebeat
+
+
+# Iniciar servicio
+sudo systemctl start filebeat
+
+
+# Consultar estado del servicio
+sudo systemctl status filebeat
+
+
+# Ver logs en tiempo real
+sudo journalctl -u filebeat -f
+
+Filebeat Windows
+# Ir a carpeta de trabajo
+cd C:\Temp
+
+# Descargar Filebeat
+Invoke-WebRequest `
+-Uri "https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-9.4.1-windows-x86_64.zip" `
+-OutFile "filebeat-9.4.1-windows-x86_64.zip"
+
+# Crear directorio destino
+New-Item -ItemType Directory -Path C:\Elastic -Force
+
+# Descomprimir
+Expand-Archive `
+-Path .\filebeat-9.4.1-windows-x86_64.zip `
+-DestinationPath C:\Elastic `
+-Force
+
+# Entrar a Filebeat
+cd C:\Elastic\filebeat-9.4.1-windows-x86_64
+
+# Editar configuración
+notepad .\filebeat.yml
+
+# Validar sintaxis
+.\filebeat.exe test config -e
+
+# Validar conectividad a Elasticsearch
+.\filebeat.exe test output -e
+
+# Instalar servicio
+.\filebeat.exe install service
+
+# Iniciar servicio
+Start-Service filebeat
+
+# Verificar estado
+Get-Service filebeat
+
+# Ver logs del servicio
+Get-WinEvent -LogName Application -MaxEvents 50
+
+
+Fleet Server RHEL
+
+
+# Importar GPG key de Elastic
+sudo rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch  # Firma de paquetes Elastic
+
+
+# Agregar repositorio Elastic 9.x
+sudo tee /etc/yum.repos.d/elastic-9.x.repo <<'EOF'  
+[elastic-9.x]
+name=Elastic repository for 9.x packages
+baseurl=https://artifacts.elastic.co/packages/9.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+EOF
+
+
+# Limpiar cache de repositorios
+sudo dnf clean all  # Limpia metadata previa
+
+
+# Actualizar metadata
+sudo dnf makecache  # Reconstruye cache de paquetes
+
+
+# Instalar Elastic Agent (base para Fleet Server)
+sudo dnf install -y elastic-agent  # Instala agente oficial Elastic
+
+
+# Registrar Fleet Server contra Elasticsearch
+sudo elastic-agent install \
+  --fleet-server-es=https://elastic01.pre.procesar.com.mx:9200 \
+  --fleet-server-service-token=XXXXXX \
+  --fleet-server-policy=fleet-server-policy \
+  --fleet-server-insecure-http \
+  --url=https://elastic01.pre.procesar.com.mx:8220  # Registra Fleet Server
+
+
+# Habilitar servicio
+sudo systemctl enable elastic-agent  # Arranque automático
+
+
+# Iniciar servicio
+sudo systemctl start elastic-agent  # Inicia Fleet Server
+
+
+# Ver estado
+sudo systemctl status elastic-agent  # Estado del agente
+
+
+# Ver logs
+sudo journalctl -u elastic-agent -f  # Logs en tiempo real
+
+
+Configuraciones
+Sistema operativo 
+# Aplicar cambios del kernel
+sudo sysctl -p
+
+
+# Para hacerlo permanente:
+sudo vim /etc/fstab
+
+
+# COMENTA
+# /swapfile none swap sw 0 0
+ 
+
+
+# Verificar que swap esté deshabilitado
+free -h
+sudo sysctl -p /etc/sysctl.d/99-elastic.conf
+vm.swappiness=1
+vm.max_map_count=262144
+net.ipv4.tcp_max_syn_backlog=65536
+net.core.somaxconn=32768
+net.core.netdev_max_backlog=32768
+net.ipv4.tcp_retries2=5
+
+#aplicar cambios:
+sudo sysctl --system
+
+#validaciones
+sysctl vm.swappiness
+sysctl vm.max_map_count
+sysctl net.ipv4.tcp_max_syn_backlog
+sysctl net.core.somaxconn
+sysctl net.core.netdev_max_backlog
+sysctl net.ipv4.tcp_retries2
+
+
+# Elasticsearch.yml
+
+cluster.name: procesarpre
+
+# Cambiar según el nodo (elastic01, elastic02 o elastic03)
+node.name: elastic02
+
+node.roles:
+  - master
+  - data
+  - ingest
+  - ml
+
+path.data: /opt/middleware/domains/data
+path.logs: /opt/middleware/domains/logs
+bootstrap.memory_lock: true
+
+
+# Cambiar según el FQDN del nodo
+network.host: elastic02.pre.procesar.com.mx
+http.port: 9200
+
+
+# Incluir los 3 nodos del clúster
+discovery.seed_hosts:
+  - elastic01.pre.procesar.com.mx
+  - elastic02.pre.procesar.com.mx
+  - elastic03.pre.procesar.com.mx
+
+
+# Utilizar únicamente durante la creación inicial del clúster
+cluster.initial_master_nodes:
+  - elastic01
+  - elastic02
+  - elastic03
+
+xpack.ml.enabled: true
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.keystore.path: elastic-certificates.p12
+xpack.security.transport.ssl.truststore.path: elastic-certificates.p12
+
+
+#Elastic APM - Configuración Agente Java (Elastic Stack 9.x)
+1. Descarga del agente Elastic APM (Java)
+# Crear directorio estándar del agente
+sudo mkdir -p /opt/elastic/apm
+
+
+# Descargar agente compatible
+wget https://repo1.maven.org/maven2/co/elastic/apm/elastic-apm-agent/1.55.6/elastic-apm-agent-1.55.6.jar
+
+
+# Mover a ubicación final
+sudo mv elastic-apm-agent-1.55.6.jar /opt/elastic/apm/elastic-apm-agent.jar
+
+
+# Verificación
+ls -lh /opt/elastic/apm/
+2. Configuración del APM Server en Elastic 9.x
+En Kibana:
+Management → Integrations → Elastic APM → Add Elastic APM
+Configuración básica:
+Integration name: apm-1
+
+
+APM Server host:
+http://apm-server:8200
+
+Asociar a Agent Policy
+Durante el asistente:
+Select Agent Policy:
+fleet-server-policy (o la política activa del entorno)
+Luego:
+Save and continue
+Save integration
+
+3. Verificación de la integración (IMPORTANTE)
+En Kibana:
+Management → Fleet → Agent Policies
+Seleccionar la policy usada.
+Validar:
+* Elastic APM → Status: Healthy / Active
+Luego:
+Management → Fleet → Agents
+Validar:
+* Elastic Agent en estado: Healthy
+
+4. Configuración del agente Java
+Variables de entorno:
+export ELASTIC_APM_SERVICE_NAME=mi-aplicacion
+export ELASTIC_APM_SERVER_URL=http://apm-server:8200
+export ELASTIC_APM_ENVIRONMENT=produccion
+export ELASTIC_APM_TRANSACTION_SAMPLE_RATE=1.0
+
+6. Ejecución de aplicación Java con Elastic APM
+El Elastic APM Agent se integra en la JVM de la aplicación Java mediante -javaagent, lo que permite la instrumentación automática sin necesidad de modificar el código.
+Existen dos formas principales de habilitarlo, dependiendo del entorno de ejecución.
+
+Ejecución manual (modo JAR / pruebas / desarrollo)
+Este método se utiliza cuando la aplicación se ejecuta directamente con java -jar.
+
+Comando:
+java -javaagent:/opt/elastic/apm/elastic-apm-agent.jar \
+ -jar aplicacion.jar
+
+Descripción:
+* java: ejecuta la máquina virtual de Java
+* -javaagent: carga el agente de Elastic APM dentro de la JVM
+* aplicacion.jar: aplicación Java que será instrumentada
+En este modo, el agente se activa únicamente mientras la aplicación está en ejecución.
+Ejecución como servicio en Linux
+Este método se utiliza en entornos productivos donde la aplicación se ejecuta como servicio del sistema.
+
+Opción A: systemd
+Editar el servicio:
+sudo vim /etc/systemd/system/app.service
+Ejemplo de configuración:
+[Service]
+ExecStart=/usr/bin/java \
+ -javaagent:/opt/elastic/apm/elastic-apm-agent.jar \
+ -jar /opt/app/aplicacion.jar
+
+Aplicar cambios:
+sudo systemctl daemon-reload
+sudo systemctl restart app
+
+Opción B: JVM options (entornos que lo soportan)
+En algunos entornos, la JVM puede leer parámetros desde archivos de configuración.
+Ubicaciones típicas:
+/etc/jvm.options
+o
+/etc/jvm.options.d/apm.options
+
+# Contenido del archivo:
+-javaagent:/opt/elastic/apm/elastic-apm-agent.jar
+
+En este caso, el agente se carga automáticamente al iniciar la JVM.
+Diferencias principales
+Método
+	Uso típico
+	Gestión
+	java -jar con -javaagent
+	desarrollo / pruebas
+	manual
+	systemd o jvm.options
+	producción
+	sistema operativo
+	Resumen
+El agente de Elastic APM puede activarse de dos formas:
+
+1. Incluyéndolo directamente en el comando de ejecución de Java.
+
+2. Integrándolo en la configuración del sistema o de la JVM en entornos productivos.
+En ambos casos, el objetivo es el mismo: instrumentar la aplicación Java para enviar métricas, trazas y errores a Elastic APM sin modificar el código fuente.
+Validación en Kibana (FALTA en tu manual original)
+Ir a:
+Observability → APM → Services
+Verificar:
+* Service name: mi-aplicacion
+* Transactions visibles
+* Latency
+* Errors (si existen)
+* Service map (dependencias)
+Prueba de generación de datos
+
+#curl http://localhost:8080/hello
+curl http://localhost:8080/error
