@@ -1,24 +1,49 @@
-echo "2026-06-19 18:00:00|999999|I|USER_TEST|888888|1111|1500.00|0.00|2026-06-19 12:30:15|FOLIO123|RFC999999XYZ|1|A|ACTIVO|CURP999999|2222|CV01|AFORE_TEST" | nc 172.21.66.152 5044
+output {
 
+  # 1. EL FILTRO FILTRA-BASURA VA AL INICIO
+  # Si el registro trae CUALQUIER error, se detiene aquí y lo separamos por archivo
+  if "_csvparsefailure" in [tags] or "_dateparsefailure" in [tags] {
+    
+    if "retiros" in [tags] {
+      file {
+        path => "/tmp/retiros_errores.log"
+        codec => json_lines
+      }
+    }
+    else if "quejas" in [tags] {
+      file {
+        path => "/tmp/quejas_errores.log"
+        codec => json_lines
+      }
+    }
 
-
-# Transforma el texto de la fecha del movimiento en un objeto de fecha real para analisis temporal
-  date {
-    match => [ "DM_TIMESTAMP", "yyyy-MM-dd HH:mm:ss" ]
-    target => "DM_TIMESTAMP"
-    timezone => "America/Mexico_City"
+  }
+  
+  # 2. SI PASÓ LIMPIO, CAE EN TUS CONDICIONALES SIMPLES
+  else if "retiros" in [tags] {
+    elasticsearch {
+      hosts => ["https://IP_DE_TU_ELASTIC:9200"]
+      api_key => "bV9ZajVZMDBCc0JGUTMwT0E0bXU6YVhKRE9Xb3hScm1DM2pZOW00bWdBdw=="
+      ssl_enabled => true
+      ssl_verification_mode => "none"
+      index => "nsartr-retiro-%{+YYYY.MM}"
+      document_id => "%{ID_SOL_RETIRO}"
+      action => "%{[@metadata][action]}"
+    }
   }
 
-  # Transforma la fecha del tramite y la asigna al campo principal para que el output determine el mes del indice
-  date {
-    match => [ "FC_SOLICITUD", "yyyy-MM-dd HH:mm:ss" ]
-    target => "@timestamp"
-    timezone => "America/Mexico_City"
+  else if "quejas" in [tags] {
+    elasticsearch {
+      hosts => ["https://IP_DE_TU_ELASTIC:9200"]
+      api_key => "bV9ZajVZMDBCc0JGUTMwT0E0bXU6YVhKRE9Xb3hScm1DM2pZOW00bWdBdw=="
+      ssl_enabled => true
+      ssl_verification_mode => "none"
+      index => "nsartr-quejas-%{+YYYY.MM}"
+      document_id => "%{ID_APP_QUEJAS}"
+      action => "%{[@metadata][action]}"
+    }
   }
 
-  # Convierte el campo original FC_SOLICITUD a formato ISO para que Elasticsearch lo acepte sin errores
-  date {
-    match => [ "FC_SOLICITUD", "yyyy-MM-dd HH:mm:ss" ]
-    target => "FC_SOLICITUD"
-    timezone => "America/Mexico_City"
-  }
+  stdout { codec => rubydebug }
+
+}
