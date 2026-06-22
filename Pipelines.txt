@@ -1,90 +1,150 @@
-filter {
-  csv {
-    separator => "|"
-    columns => [
-      "DM_TIMESTAMP",
-      "DM_TXID",
-      "DM_OPERATION_TYPE",
-      "DM_USER",
-      "ID_SOL_RETIRO",
-      "ID_PROCESAR",
-      "NU_MONTO_DEDUCIBLE",
-      "NU_MONTO_NO_DEDUCIBLE",
-      "FC_SOLICITUD",
-      "CH_FOLIO_FACIAL",
-      "RFC",
-      "NU_TIPO_APLICACION",
-      "CV_ESTATUS_RETIRO",
-      "CH_DESC_ESTATUS_RETIRO",
-      "CURP",
-      "ID_PROCESAR_AFORE",
-      "CV_AFORE",
-      "CH_DESC_AFORE"
-    ]
-  }
+# ==========================================================================
+  # SECCION: LOGICA PARA QUEJAS
+  # ==========================================================================
+  if "quejas" in [tags] {
 
-  mutate {
-    strip => [
-      "DM_TIMESTAMP",
-      "DM_TXID",
-      "DM_OPERATION_TYPE",
-      "DM_USER",
-      "ID_SOL_RETIRO",
-      "ID_PROCESAR",
-      "NU_MONTO_DEDUCIBLE",
-      "NU_MONTO_NO_DEDUCIBLE",
-      "FC_SOLICITUD",
-      "CH_FOLIO_FACIAL",
-      "RFC",
-      "NU_TIPO_APLICACION",
-      "CV_ESTATUS_RETIRO",
-      "CH_DESC_ESTATUS_RETIRO",
-      "CURP",
-      "ID_PROCESAR_AFORE",
-      "CV_AFORE",
-      "CH_DESC_AFORE"
-    ]
-  }
-
-  mutate {
-    gsub => [
-      "DM_TXID", "\.$", "",
-      "ID_SOL_RETIRO", "\.$", "",
-      "ID_PROCESAR", "\.$", "",
-      "NU_TIPO_APLICACION", "\.$", "",
-      "ID_PROCESAR_AFORE", "\.$", ""
-    ]
-  }
-
-  mutate {
-    convert => {
-      "DM_TXID" => "integer"
-      "ID_SOL_RETIRO" => "integer"
-      "ID_PROCESAR" => "integer"
-      "ID_PROCESAR_AFORE" => "integer"
-      "NU_TIPO_APLICACION" => "integer"
-      "NU_MONTO_DEDUCIBLE" => "float"
-      "NU_MONTO_NO_DEDUCIBLE" => "float"
+    # 1. Rompe la linea de texto plano usando el separador de tuberias en las 32 columnas en orden posicional
+    csv {
+      separator => "|"
+      columns => [
+        "DM_TIMESTAMP",
+        "DM_TXID",
+        "DM_OPERATION_TYPE",
+        "DM_USER",
+        "ID_APP_QUEJAS",
+        "CH_FOLIO",
+        "CURP",
+        "CV_AFORE",
+        "CV_APP_QUEJAS_PROCESO",
+        "CH_ESTATUS",
+        "CH_APP_ORIGEN",
+        "CH_VERSION_APP",
+        "CH_SISTEMA_OPERATIVO",
+        "CH_NOMBRE_TRAB",
+        "CH_APELLIDO_PATERNO_TRAB",
+        "CH_APELLIDO_MATERNO_TRAB",
+        "CH_CORREO_ELECTRONICO",
+        "CH_TELEFONO_CELULAR",
+        "CH_NSS",
+        "CH_HORARIO_CONTACTO",
+        "CH_MEDIO_CONTACTO",
+        "CH_FOLIO_AFORE",
+        "FC_INCIDENCIA",
+        "FC_RECEPCION",
+        "FC_CONCLUSION",
+        "FC_CONTROL",
+        "CH_USUARIO_MODIFICADOR",
+        "NU_DIAS_RESP_AFO",
+        "NU_NOTIFICADA_BATCH",
+        "CH_CLASIFICACION",
+        "CH_DESCRIPCION",
+        "CH_RESPUESTA_AFORE"
+      ]
     }
-  }
 
-  date {
-    match => [ "DM_TIMESTAMP", "yyyy-MM-dd HH:mm:ss" ]
-    target => "DM_TIMESTAMP"
-    timezone => "America/Mexico_City"
-  }
+    # 2. Limpia los espacios vacios sucios al inicio y final de todas las cadenas de texto
+    mutate {
+      strip => [
+        "DM_TIMESTAMP",
+        "DM_TXID",
+        "DM_OPERATION_TYPE",
+        "DM_USER",
+        "ID_APP_QUEJAS",
+        "CH_FOLIO",
+        "CURP",
+        "CV_AFORE",
+        "CV_APP_QUEJAS_PROCESO",
+        "CH_ESTATUS",
+        "CH_APP_ORIGEN",
+        "CH_VERSION_APP",
+        "CH_SISTEMA_OPERATIVO",
+        "CH_NOMBRE_TRAB",
+        "CH_APELLIDO_PATERNO_TRAB",
+        "CH_APELLIDO_MATERNO_TRAB",
+        "CH_CORREO_ELECTRONICO",
+        "CH_TELEFONO_CELULAR",
+        "CH_NSS",
+        "CH_HORARIO_CONTACTO",
+        "CH_MEDIO_CONTACTO",
+        "CH_FOLIO_AFORE",
+        "FC_INCIDENCIA",
+        "FC_RECEPCION",
+        "FC_CONCLUSION",
+        "FC_CONTROL",
+        "CH_USUARIO_MODIFICADOR",
+        "NU_DIAS_RESP_AFO",
+        "NU_NOTIFICADA_BATCH",
+        "CH_CLASIFICACION",
+        "CH_DESCRIPCION",
+        "CH_RESPUESTA_AFORE"
+      ]
+    }
 
-  date {
-    match => [ "FC_SOLICITUD", "yyyy-MM-dd HH:mm:ss" ]
-    target => "@timestamp"
-    timezone => "America/Mexico_City"
-  }
+    # 3. Elimina el punto final de los campos numericos mapeados desde la base de datos Oracle
+    mutate {
+      gsub => [
+        "DM_TXID", "\.$", "",
+        "ID_APP_QUEJAS", "\.$", "",
+        "NU_DIAS_RESP_AFO", "\.$", "",
+        "NU_NOTIFICADA_BATCH", "\.$", ""
+      ]
+    }
 
-  if [DM_OPERATION_TYPE] == "I" or [DM_OPERATION_TYPE] == "U" {
-    mutate { add_field => { "[@metadata][action]" => "index" } }
-  } else if [DM_OPERATION_TYPE] == "D" {
-    mutate { add_field => { "[@metadata][action]" => "delete" } }
-  } else {
-    mutate { add_field => { "[@metadata][action]" => "index" } }
+    # 4. Convierte las cadenas de texto limpias a tipos numericos puros (integers)
+    mutate {
+      convert => {
+        "DM_TXID" => "integer"
+        "ID_APP_QUEJAS" => "integer"
+        "NU_DIAS_RESP_AFO" => "integer"
+        "NU_NOTIFICADA_BATCH" => "integer"
+      }
+    }
+
+    # 5. Tratamiento de Fechas y Timestamps para conversion estricta a formato ISO
+    date {
+      match => [ "DM_TIMESTAMP", "yyyy-MM-dd HH:mm:ss" ]
+      target => "DM_TIMESTAMP"
+      timezone => "America/Mexico_City"
+    }
+
+    date {
+      match => [ "FC_INCIDENCIA", "yyyy-MM-dd HH:mm:ss" ]
+      target => "FC_INCIDENCIA"
+      timezone => "America/Mexico_City"
+    }
+
+    # Usamos la fecha de recepcion de la queja para indexar temporalmente la particion mensual (%{+YYYY.MM})
+    date {
+      match => [ "FC_RECEPCION", "yyyy-MM-dd HH:mm:ss" ]
+      target => "@timestamp"
+      timezone => "America/Mexico_City"
+    }
+
+    date {
+      match => [ "FC_RECEPCION", "yyyy-MM-dd HH:mm:ss" ]
+      target => "FC_RECEPCION"
+      timezone => "America/Mexico_City"
+    }
+
+    date {
+      match => [ "FC_CONCLUSION", "yyyy-MM-dd HH:mm:ss" ]
+      target => "FC_CONCLUSION"
+      timezone => "America/Mexico_City"
+    }
+
+    date {
+      match => [ "FC_CONTROL", "yyyy-MM-dd HH:mm:ss" ]
+      target => "FC_CONTROL"
+      timezone => "America/Mexico_City"
+    }
+
+    # 6. Evaluacion de metadatos de accion basandose en la operacion capturada (Insert, Update, Delete)
+    if [DM_OPERATION_TYPE] == "I" or [DM_OPERATION_TYPE] == "U" {
+      mutate { add_field => { "[@metadata][action]" => "index" } }
+    } else if [DM_OPERATION_TYPE] == "D" {
+      mutate { add_field => { "[@metadata][action]" => "delete" } }
+    } else {
+      mutate { add_field => { "[@metadata][action]" => "index" } }
+    }
+
   }
-}
