@@ -1,10 +1,11 @@
-# AL FINAL DEL FILTER: Limpieza masiva con Prune
-  prune {
-    whitelist_names => [
-      "@timestamp", "tags", "fecha_ingesta",
-      # Campos de Retiros
-      "AFORE", "CURP", "FECHA SOLICITUD", "PERIODO", "ESTATUS", "MONO DEDUCIBLE", "MONTO NO DEDUCIBLE", "TOTAL MONTO RETIRO", "CH_FOLIO_FACIAL", "RFC", "ORIGEN", "ID_SOL_RETIRO",
-      # Campos de Quejas
-      "Curp", "Medio por el cual se Recibió", "Fecha y hora de Recepción", "Fecha Notificación a la Afore", "Diagnostico de la Afore", "Fecha de respuesta por la Afore", "Fecha de notificación de respuesta a la Afore", "La respuesta fue satisfactoria", "Folio", "Afore", "Tipo Proceso", "Version Aplicación", "Sistema Operativo", "Nombre del Ahorrador", "Apellido Paterno", "Apellido Materno", "Correo Electrónico", "Celular", "NSS", "Horario de Contácto", "Medio de Contacto", "Folio AFORE", "Fecha Incidencia", "Fecha Conclusión", "Fecha Finalización", "Tipo de clasificación", "Descripción de la Queja", "Respuesta AFORE", "ID_APP_QUEJAS"
-    ]
+
+  if [log][file][path] {
+    mutate {
+      add_field => { "ORIGEN_ARCHIVO" => "%{[log][file][path]}" }
+    }
+  }
+
+  # 2. Borramos los objetos pesados de Filebeat y el duplicado "event" (donde venía event.original)
+  mutate {
+    remove_field => [ "agent", "host", "ecs", "input", "log", "event", "@version" ]
   }
