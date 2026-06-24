@@ -1,8 +1,6 @@
-   ruby {
-      code => '
-        msg = event.get("message")
-        if msg
-          event.set("message", msg.delete(92.chr))
-        end
-      '
-    }
+parsers:
+    - multiline:
+        type: pattern
+        pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+        negate: true
+        match: after
