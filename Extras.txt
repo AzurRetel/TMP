@@ -1,49 +1,10 @@
-output {
-
-  # 1. EL FILTRO FILTRA-BASURA VA AL INICIO
-  # Si el registro trae CUALQUIER error, se detiene aquí y lo separamos por archivo
-  if "_csvparsefailure" in [tags] or "_dateparsefailure" in [tags] {
-    
-    if "retiros" in [tags] {
-      file {
-        path => "/tmp/retiros_errores.log"
-        codec => json_lines
-      }
-    }
-    else if "quejas" in [tags] {
-      file {
-        path => "/tmp/quejas_errores.log"
-        codec => json_lines
-      }
-    }
-
+# AL FINAL DEL FILTER: Limpieza masiva con Prune
+  prune {
+    whitelist_names => [
+      "@timestamp", "tags", "fecha_ingesta",
+      # Campos de Retiros
+      "AFORE", "CURP", "FECHA SOLICITUD", "PERIODO", "ESTATUS", "MONO DEDUCIBLE", "MONTO NO DEDUCIBLE", "TOTAL MONTO RETIRO", "CH_FOLIO_FACIAL", "RFC", "ORIGEN", "ID_SOL_RETIRO",
+      # Campos de Quejas
+      "Curp", "Medio por el cual se Recibió", "Fecha y hora de Recepción", "Fecha Notificación a la Afore", "Diagnostico de la Afore", "Fecha de respuesta por la Afore", "Fecha de notificación de respuesta a la Afore", "La respuesta fue satisfactoria", "Folio", "Afore", "Tipo Proceso", "Version Aplicación", "Sistema Operativo", "Nombre del Ahorrador", "Apellido Paterno", "Apellido Materno", "Correo Electrónico", "Celular", "NSS", "Horario de Contácto", "Medio de Contacto", "Folio AFORE", "Fecha Incidencia", "Fecha Conclusión", "Fecha Finalización", "Tipo de clasificación", "Descripción de la Queja", "Respuesta AFORE", "ID_APP_QUEJAS"
+    ]
   }
-  
-  # 2. SI PASÓ LIMPIO, CAE EN TUS CONDICIONALES SIMPLES
-  else if "retiros" in [tags] {
-    elasticsearch {
-      hosts => ["https://IP_DE_TU_ELASTIC:9200"]
-      api_key => "bV9ZajVZMDBCc0JGUTMwT0E0bXU6YVhKRE9Xb3hScm1DM2pZOW00bWdBdw=="
-      ssl_enabled => true
-      ssl_verification_mode => "none"
-      index => "nsartr-retiro-%{+YYYY.MM}"
-      document_id => "%{ID_SOL_RETIRO}"
-      action => "%{[@metadata][action]}"
-    }
-  }
-
-  else if "quejas" in [tags] {
-    elasticsearch {
-      hosts => ["https://IP_DE_TU_ELASTIC:9200"]
-      api_key => "bV9ZajVZMDBCc0JGUTMwT0E0bXU6YVhKRE9Xb3hScm1DM2pZOW00bWdBdw=="
-      ssl_enabled => true
-      ssl_verification_mode => "none"
-      index => "nsartr-quejas-%{+YYYY.MM}"
-      document_id => "%{ID_APP_QUEJAS}"
-      action => "%{[@metadata][action]}"
-    }
-  }
-
-  stdout { codec => rubydebug }
-
-}
