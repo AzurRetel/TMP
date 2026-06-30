@@ -28,3 +28,6 @@
 🤖 Android
 🍏 iOS
 🌐 AforeWeb
+
+📩 Correo Electrónico
+📞 Celular
