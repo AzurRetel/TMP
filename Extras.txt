@@ -1,9 +1,14 @@
-Retiro_Matrimonio	💍 Retiro por Matrimonio
-Retiro_Desempleo	📉 Retiro por Desempleo
-Retiro_AporVol	💵 Retiro de Aportaciones Voluntarias
-Modi_Datos	✏️ Modificación de Datos
-ConSaldos_Mov	📊 Consulta de Saldos y Movimientos
-Ahorro_Linea	💰 Ahorro en Línea
-Solicitud_Documento	📄 Solicitud de Documento
-RegCon_Menores	👶 Registro y Consulta de Menores
-Sin_Proceso	❓ Sin Proceso
+💍 Retiro por Matrimonio
+📉 Retiro por Desempleo
+💵 Retiro de Aportaciones Voluntarias
+✏️ Modificación de Datos
+📊 Consulta de Saldos y Movimientos
+💰 Ahorro en Línea
+📄 Solicitud de Documento
+👶 Registro y Consulta de Menores
+❓ Sin Proceso
+
+
+🌐 AforeWeb
+📲 App Genérica
+🧩 App Personalizada
