@@ -12,3 +12,9 @@
 🌐 AforeWeb
 📲 App Genérica
 🧩 App Personalizada
+
+
+01📥 Asignada
+02🚫 Cancelada
+03✅ Atendida
+04🧹 Depurada
