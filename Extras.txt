@@ -18,3 +18,8 @@
 02🚫 Cancelada
 03✅ Atendida
 04🧹 Depurada
+
+🔔 Notificada
+💰 Aceptada
+❌ Rechazada
+📝 Registrada
