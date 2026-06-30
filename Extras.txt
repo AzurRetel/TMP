@@ -23,3 +23,8 @@
 💰 Aceptada
 ❌ Rechazada
 📝 Registrada
+
+
+🤖 Android
+🍏 iOS
+🌐 AforeWeb
