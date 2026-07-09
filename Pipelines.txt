@@ -44,17 +44,13 @@ if [tipo_log] == "weblogic-uat" {
 
 }
 
-output {
+# --- BLOQUE NUEVO PARA WEBLOGIC ---
   if [tipo_log] == "weblogic-uat" {
-    
-    # El destino para tu PoC de WebLogic
     elasticsearch {
-      hosts => ["http://localhost:9200"] # Asegúrate de que esta sea la IP de tu Elastic
+      hosts => ["https://172.21.66.150:9200","https://172.21.66.155:9200"]
       index => "logs-weblogic-uat"
+      api_key => "elF2RzI1NEJsZ0RGWWM2VDVtbjI6SkZubGdE_EpUaVRHUVVCN3R3Q0RWZw=="
+      ssl_enabled => true
+      ssl_verification_mode => "none"
     }
-
-  } else {
-    
-    
   }
-}
