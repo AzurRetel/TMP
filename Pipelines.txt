@@ -1,5 +1,5 @@
-filebeat.inputs:
-- type: log
+- type: filestream
+  id: weblogic-uat-server1
   enabled: true
   paths:
     - /opt/middleware/logs1/AFOREWEBUATDM_2/aforews_server1.out
@@ -7,13 +7,15 @@ filebeat.inputs:
     tipo_log: weblogic-uat
     servidor_origen: server1
   fields_under_root: true
-  # CONFIGURACIÓN MULTILÍNEA: Junta las líneas de error con su cabecera
-  multiline.type: pattern
-  multiline.pattern: '^\[|^[0-9]'
-  multiline.negate: true
-  multiline.match: after
+  parsers:
+    - multiline:
+        type: pattern
+        pattern: '^\[|^[0-9]'
+        negate: true
+        match: after
 
-- type: log
+- type: filestream
+  id: weblogic-uat-server2
   enabled: true
   paths:
     - /opt/middleware/logs2/AFOREWEBUATDM_2/aforews_server2.out
@@ -21,10 +23,16 @@ filebeat.inputs:
     tipo_log: weblogic-uat
     servidor_origen: server2
   fields_under_root: true
-  multiline.type: pattern
-  multiline.pattern: '^\[|^[0-9]'
-  multiline.negate: true
-  multiline.match: after
+  parsers:
+    - multiline:
+        type: pattern
+        pattern: '^\[|^[0-9]'
+        negate: true
+        match: after
+
+
+
+
 
 if [tipo_log] == "weblogic-uat" {
   
