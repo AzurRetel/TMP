@@ -26,28 +26,23 @@ filebeat.inputs:
   multiline.negate: true
   multiline.match: after
 
-filter {
-  if [tipo_log] == "weblogic-uat" {
-    
-    if "[TRACE]" in [message] {
-      mutate { add_field => { "log_level" => "TRACE" } }
-    } 
-    else if "[DEBUG]" in [message] {
-      mutate { add_field => { "log_level" => "DEBUG" } }
-    } 
-    # Validamos: Excepciones de Java OR cualquier respuesta HTTP que empiece con 4 o 5 (4xx o 5xx)
-    else if "Exception" in [message] or "Excepcion" in [message] or [message] =~ /Response <[45]/ {
-      mutate { add_field => { "log_level" => "ERROR" } }
-    } 
-    else {
-      mutate { add_field => { "log_level" => "INFO" } }
-    }
-
-  } else {
-    # AQUÍ SE QUEDA LO DE RETIROS Y QUEJAS INTACTO
+if [tipo_log] == "weblogic-uat" {
+  
+  if "[TRACE]" in [message] {
+    mutate { add_field => { "log_level" => "TRACE" } }
+  } 
+  else if "[DEBUG]" in [message] {
+    mutate { add_field => { "log_level" => "DEBUG" } }
+  } 
+  # Validamos: Excepciones de Java OR cualquier respuesta HTTP que empiece con 4 o 5 (4xx o 5xx)
+  else if "Exception" in [message] or "Excepcion" in [message] or [message] =~ /Response <[45]/ {
+    mutate { add_field => { "log_level" => "ERROR" } }
+  } 
+  else {
+    mutate { add_field => { "log_level" => "INFO" } }
   }
-}
 
+}
 
 output {
   if [tipo_log] == "weblogic-uat" {
