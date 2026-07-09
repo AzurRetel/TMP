@@ -35,7 +35,19 @@
 
 
 if [tipo_log] == "weblogic-uat" {
-  
+  grok {
+    match => { "message" => "^\[%{DATA}\] (?<fecha_log_texto>%{YEAR}-%{MONTHNUM}-%{MONTHDAY} %{HOUR}:%{MINUTE}:%{SECOND}\.%{INT})" }
+  }
+
+  if [fecha_log_texto] {
+    date {
+      match => [ "fecha_log_texto", "yyyy-MM-dd HH:mm:ss.SSS" ]
+      target => "fecha_log"
+      timezone => "America/Mexico_City"
+    }
+    mutate { remove_field => [ "fecha_log_texto" ] }
+  }
+
   if "[TRACE]" in [message] {
     mutate { add_field => { "log_level" => "TRACE" } }
   } 
