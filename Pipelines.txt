@@ -1,150 +1,65 @@
-# ==========================================================================
-  # SECCION: LOGICA PARA QUEJAS
-  # ==========================================================================
-  if "quejas" in [tags] {
+filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /opt/middleware/logs1/AFOREWEBUATDM_2/aforews_server1.out
+  fields:
+    tipo_log: weblogic-uat
+    servidor_origen: server1
+  fields_under_root: true
+  # CONFIGURACIÓN MULTILÍNEA: Junta las líneas de error con su cabecera
+  multiline.type: pattern
+  multiline.pattern: '^\[|^[0-9]'
+  multiline.negate: true
+  multiline.match: after
 
-    # 1. Rompe la linea de texto plano usando el separador de tuberias en las 32 columnas en orden posicional
-    csv {
-      separator => "|"
-      columns => [
-        "DM_TIMESTAMP",
-        "DM_TXID",
-        "DM_OPERATION_TYPE",
-        "DM_USER",
-        "ID_APP_QUEJAS",
-        "CH_FOLIO",
-        "CURP",
-        "CV_AFORE",
-        "CV_APP_QUEJAS_PROCESO",
-        "CH_ESTATUS",
-        "CH_APP_ORIGEN",
-        "CH_VERSION_APP",
-        "CH_SISTEMA_OPERATIVO",
-        "CH_NOMBRE_TRAB",
-        "CH_APELLIDO_PATERNO_TRAB",
-        "CH_APELLIDO_MATERNO_TRAB",
-        "CH_CORREO_ELECTRONICO",
-        "CH_TELEFONO_CELULAR",
-        "CH_NSS",
-        "CH_HORARIO_CONTACTO",
-        "CH_MEDIO_CONTACTO",
-        "CH_FOLIO_AFORE",
-        "FC_INCIDENCIA",
-        "FC_RECEPCION",
-        "FC_CONCLUSION",
-        "FC_CONTROL",
-        "CH_USUARIO_MODIFICADOR",
-        "NU_DIAS_RESP_AFO",
-        "NU_NOTIFICADA_BATCH",
-        "CH_CLASIFICACION",
-        "CH_DESCRIPCION",
-        "CH_RESPUESTA_AFORE"
-      ]
+- type: log
+  enabled: true
+  paths:
+    - /opt/middleware/logs2/AFOREWEBUATDM_2/aforews_server2.out
+  fields:
+    tipo_log: weblogic-uat
+    servidor_origen: server2
+  fields_under_root: true
+  multiline.type: pattern
+  multiline.pattern: '^\[|^[0-9]'
+  multiline.negate: true
+  multiline.match: after
+
+filter {
+  if [tipo_log] == "weblogic-uat" {
+    
+    if "[TRACE]" in [message] {
+      mutate { add_field => { "log_level" => "TRACE" } }
+    } 
+    else if "[DEBUG]" in [message] {
+      mutate { add_field => { "log_level" => "DEBUG" } }
+    } 
+    # Validamos: Excepciones de Java OR cualquier respuesta HTTP que empiece con 4 o 5 (4xx o 5xx)
+    else if "Exception" in [message] or "Excepcion" in [message] or [message] =~ /Response <[45]/ {
+      mutate { add_field => { "log_level" => "ERROR" } }
+    } 
+    else {
+      mutate { add_field => { "log_level" => "INFO" } }
     }
 
-    # 2. Limpia los espacios vacios sucios al inicio y final de todas las cadenas de texto
-    mutate {
-      strip => [
-        "DM_TIMESTAMP",
-        "DM_TXID",
-        "DM_OPERATION_TYPE",
-        "DM_USER",
-        "ID_APP_QUEJAS",
-        "CH_FOLIO",
-        "CURP",
-        "CV_AFORE",
-        "CV_APP_QUEJAS_PROCESO",
-        "CH_ESTATUS",
-        "CH_APP_ORIGEN",
-        "CH_VERSION_APP",
-        "CH_SISTEMA_OPERATIVO",
-        "CH_NOMBRE_TRAB",
-        "CH_APELLIDO_PATERNO_TRAB",
-        "CH_APELLIDO_MATERNO_TRAB",
-        "CH_CORREO_ELECTRONICO",
-        "CH_TELEFONO_CELULAR",
-        "CH_NSS",
-        "CH_HORARIO_CONTACTO",
-        "CH_MEDIO_CONTACTO",
-        "CH_FOLIO_AFORE",
-        "FC_INCIDENCIA",
-        "FC_RECEPCION",
-        "FC_CONCLUSION",
-        "FC_CONTROL",
-        "CH_USUARIO_MODIFICADOR",
-        "NU_DIAS_RESP_AFO",
-        "NU_NOTIFICADA_BATCH",
-        "CH_CLASIFICACION",
-        "CH_DESCRIPCION",
-        "CH_RESPUESTA_AFORE"
-      ]
-    }
-
-    # 3. Elimina el punto final de los campos numericos mapeados desde la base de datos Oracle
-    mutate {
-      gsub => [
-        "DM_TXID", "\.$", "",
-        "ID_APP_QUEJAS", "\.$", "",
-        "NU_DIAS_RESP_AFO", "\.$", "",
-        "NU_NOTIFICADA_BATCH", "\.$", ""
-      ]
-    }
-
-    # 4. Convierte las cadenas de texto limpias a tipos numericos puros (integers)
-    mutate {
-      convert => {
-        "DM_TXID" => "integer"
-        "ID_APP_QUEJAS" => "integer"
-        "NU_DIAS_RESP_AFO" => "integer"
-        "NU_NOTIFICADA_BATCH" => "integer"
-      }
-    }
-
-    # 5. Tratamiento de Fechas y Timestamps para conversion estricta a formato ISO
-    date {
-      match => [ "DM_TIMESTAMP", "yyyy-MM-dd HH:mm:ss" ]
-      target => "DM_TIMESTAMP"
-      timezone => "America/Mexico_City"
-    }
-
-    date {
-      match => [ "FC_INCIDENCIA", "yyyy-MM-dd HH:mm:ss" ]
-      target => "FC_INCIDENCIA"
-      timezone => "America/Mexico_City"
-    }
-
-    # Usamos la fecha de recepcion de la queja para indexar temporalmente la particion mensual (%{+YYYY.MM})
-    date {
-      match => [ "FC_RECEPCION", "yyyy-MM-dd HH:mm:ss" ]
-      target => "@timestamp"
-      timezone => "America/Mexico_City"
-    }
-
-    date {
-      match => [ "FC_RECEPCION", "yyyy-MM-dd HH:mm:ss" ]
-      target => "FC_RECEPCION"
-      timezone => "America/Mexico_City"
-    }
-
-    date {
-      match => [ "FC_CONCLUSION", "yyyy-MM-dd HH:mm:ss" ]
-      target => "FC_CONCLUSION"
-      timezone => "America/Mexico_City"
-    }
-
-    date {
-      match => [ "FC_CONTROL", "yyyy-MM-dd HH:mm:ss" ]
-      target => "FC_CONTROL"
-      timezone => "America/Mexico_City"
-    }
-
-    # 6. Evaluacion de metadatos de accion basandose en la operacion capturada (Insert, Update, Delete)
-    if [DM_OPERATION_TYPE] == "I" or [DM_OPERATION_TYPE] == "U" {
-      mutate { add_field => { "[@metadata][action]" => "index" } }
-    } else if [DM_OPERATION_TYPE] == "D" {
-      mutate { add_field => { "[@metadata][action]" => "delete" } }
-    } else {
-      mutate { add_field => { "[@metadata][action]" => "index" } }
-    }
-
+  } else {
+    # AQUÍ SE QUEDA LO DE RETIROS Y QUEJAS INTACTO
   }
+}
+
+
+output {
+  if [tipo_log] == "weblogic-uat" {
+    
+    # El destino para tu PoC de WebLogic
+    elasticsearch {
+      hosts => ["http://localhost:9200"] # Asegúrate de que esta sea la IP de tu Elastic
+      index => "logs-weblogic-uat"
+    }
+
+  } else {
+    
+    
+  }
+}
