@@ -34,3 +34,21 @@
 
 ❓ Aclaración
 🚨 Queja
+
+
+Se detectó un comportamiento anómalo en los errores monitoreados por Elastic Machine Learning.
+
+Job de Machine Learning:
+{{context.jobIds}}
+
+Anomaly score:
+{{context.score}}
+
+Fecha y hora:
+{{context.timestampIso8601}}
+
+Detalle:
+{{context.message}}
+
+Consultar el resultado:
+{{context.anomalyExplorerUrl}}
