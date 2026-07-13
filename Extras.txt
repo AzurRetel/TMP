@@ -36,19 +36,24 @@
 🚨 Queja
 
 
-Se detectó un comportamiento anómalo en los errores monitoreados por Elastic Machine Learning.
-
-Job de Machine Learning:
-{{context.jobIds}}
-
-Anomaly score:
-{{context.score}}
-
-Fecha y hora:
-{{context.timestampIso8601}}
-
-Detalle:
-{{context.message}}
-
-Consultar el resultado:
-{{context.anomalyExplorerUrl}}
+name: "Weblogic Alert - Local Demo Workflow"
+description: "Captures Weblogic ML anomaly alerts and indexes them locally."
+triggers:
+  - id: "alert-trigger-1"
+    type: "alert"
+steps:
+  - id: "index-demo-alert-step"
+    action: "elasticsearch"
+    inputs:
+      index: "weblogic-alerts-demo"
+      # The document payload uses Liquid templating to dynamically inject alert context
+      document: >
+        {
+          "@timestamp": "{{date}}",
+          "rule_name": "{{rule.name}}",
+          "alert_id": "{{alert.id}}",
+          "job_ids": "{{context.jobIds}}",
+          "anomaly_score": "{{context.anomalyScore}}",
+          "investigation_url": "{{context.investigationUrl}}",
+          "message": "Demo: Se detectó un comportamiento anómalo en Weblogic con un score de {{context.anomalyScore}}."
+        }
