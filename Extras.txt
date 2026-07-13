@@ -36,24 +36,54 @@
 🚨 Queja
 
 
-name: "Weblogic Alert - Local Demo Workflow"
-description: "Captures Weblogic ML anomaly alerts and indexes them locally."
+name: 🚨 Weblogic Alert - Local Demo Workflow
+description: Captures Weblogic ML anomaly alerts and indexes them locally to bypass firewall restrictions.
+enabled: true
+tags: ["demo", "weblogic", "anomaly-detection"]
+consts:
+  indexName: weblogic-alerts-demo
 triggers:
-  - id: "alert-trigger-1"
-    type: "alert"
+  - type: alert
 steps:
-  - id: "index-demo-alert-step"
-    action: "elasticsearch"
-    inputs:
-      index: "weblogic-alerts-demo"
-      # The document payload uses Liquid templating to dynamically inject alert context
-      document: >
+  - name: check_if_index_exists
+    type: elasticsearch.indices.exists
+    with:
+      index: "{{ consts.indexName }}"
+
+  - name: create_index_if_missing
+    type: if
+    condition: 'steps.check_if_index_exists.output == false'
+    steps:
+      - name: no_index_found_log
+        type: console
+        with:
+          message: "Index {{ consts.indexName }} not found. Creating it now."
+      - name: create_demo_index
+        type: elasticsearch.indices.create
+        with:
+          index: "{{ consts.indexName }}"
+          mappings:
+            properties:
+              rule_name: { type: keyword }
+              message: { type: text }
+              alert_id: { type: keyword }
+
+  - name: log_incoming_alert
+    type: console
+    with:
+      message: 'Received {{ event.alerts | size }} alert(s) from rule "{{ event.rule.name }}". Proceeding to index.'
+
+  - name: index_alert_data
+    type: elasticsearch.request
+    with:
+      method: POST
+      path: /{{ consts.indexName }}/_doc
+      headers:
+        Content-Type: application/json
+      body: |
         {
-          "@timestamp": "{{date}}",
-          "rule_name": "{{rule.name}}",
-          "alert_id": "{{alert.id}}",
-          "job_ids": "{{context.jobIds}}",
-          "anomaly_score": "{{context.anomalyScore}}",
-          "investigation_url": "{{context.investigationUrl}}",
-          "message": "Demo: Se detectó un comportamiento anómalo en Weblogic con un score de {{context.anomalyScore}}."
+          "rule_name": "{{ event.rule.name }}",
+          "alert_id": "{{ event.alerts[0]._id }}",
+          "space_id": "{{ event.spaceId }}",
+          "message": "Demo: Se detectó un comportamiento anómalo en Weblogic."
         }
